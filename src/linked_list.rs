@@ -1,3 +1,5 @@
+use std::collections::btree_map::Values;
+
 struct Node<T> {
     value: T,
     next: Option<Box<Node<T>>>,
@@ -100,5 +102,27 @@ impl<T> LinkedList<T> {
         }
         current.as_ref().map(|node| &node.value)
     }
-}
 
+    fn insert_at_index(&mut self, index: usize, value: T) {
+        if index == 0 {
+            return self.push_front(value);
+        }
+
+        if self.head.is_none() && index > 0 {
+            return;
+        }
+
+        let mut current = self.head.as_mut().unwrap();
+
+        for _ in 0..(index - 1) {
+            match current.next.as_mut() {
+                Some(node) => current = node,
+                None => return,
+            }
+            current = current.next.as_mut().unwrap();
+        }
+
+        let new_node = Box::new(Node::new(value, current.next.take()));
+        current.next = Some(new_node);
+    }
+}
