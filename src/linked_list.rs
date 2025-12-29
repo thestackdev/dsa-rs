@@ -119,10 +119,27 @@ impl<T> LinkedList<T> {
                 Some(node) => current = node,
                 None => return,
             }
-            current = current.next.as_mut().unwrap();
         }
 
         let new_node = Box::new(Node::new(value, current.next.take()));
         current.next = Some(new_node);
+    }
+
+    fn remove_at_index(&mut self, index: usize) -> Option<T> {
+        if index == 0 {
+            return self.pop_front();
+        }
+
+        let mut current = self.head.as_mut()?;
+
+        for _ in 0..(index - 1) {
+            current = current.next.as_mut()?;
+        }
+
+        let removed_node = current.next.take()?;
+
+        current.next = removed_node.next;
+
+        Some(removed_node.value)
     }
 }
