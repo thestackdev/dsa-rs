@@ -1,5 +1,3 @@
-use std::collections::btree_map::Values;
-
 struct Node<T> {
     value: T,
     next: Option<Box<Node<T>>>,
@@ -141,5 +139,45 @@ impl<T> LinkedList<T> {
         current.next = removed_node.next;
 
         Some(removed_node.value)
+    }
+
+    fn peek_back(&self) -> Option<&T> {
+        let mut current = self.head.as_ref()?;
+
+        while current.next.is_some() {
+            current = current.next.as_ref()?;
+        }
+
+        Some(&current.value)
+    }
+
+    fn contains(&self, value: T) -> bool
+    where
+        T: PartialEq,
+    {
+        let mut current = &self.head;
+
+        while let Some(node) = current {
+            if node.value == value {
+                return true;
+            }
+            current = &node.next;
+        }
+
+        false
+    }
+
+    fn reverse(&mut self) {
+        let mut current = self.head.take();
+        let mut prev = None;
+
+        while let Some(mut node) = current {
+            let next = node.next.take();
+            node.next = prev;
+            prev = Some(node);
+            current = next;
+        }
+
+        self.head = prev;
     }
 }
