@@ -1,3 +1,10 @@
+use core::num;
+use std::{
+    cell::RefMut,
+    fmt::{self, Display},
+};
+
+#[derive(Debug)]
 struct Node<T> {
     value: T,
     next: Option<Box<Node<T>>>,
@@ -9,121 +16,139 @@ impl<T> Node<T> {
     }
 }
 
-struct LinkedList<T> {
+impl<T: Display> fmt::Display for Node<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.value)
+    }
+}
+
+pub struct LinkedList<T> {
     head: Option<Box<Node<T>>>,
 }
 
-impl<T> LinkedList<T> {
-    fn new() -> Self {
+impl<T: fmt::Display> LinkedList<T> {
+    pub fn new() -> Self {
         Self { head: None }
     }
 
-    fn push_front(&mut self, value: T) {
+    pub fn push_front(&mut self, value: T) {
         let new_node = Box::new(Node::new(value, self.head.take()));
         self.head = Some(new_node);
     }
 
-    fn pop_front(&mut self) -> Option<T> {
-        self.head.take().map(|node| {
-            self.head = node.next;
-            node.value
-        })
-    }
+    pub fn display(&self) {
+        let mut current = self.head.as_ref();
 
-    fn push_back(&mut self, value: T) {
-        let new_node = Box::new(Node::new(value, None));
-
-        match &mut self.head {
-            None => self.head = Some(new_node),
-            Some(current) => {
-                let mut current = current;
-                while current.next.is_some() {
-                    current = current.next.as_mut().unwrap();
-                }
-                current.next = Some(new_node);
-            }
+        while let Some(node) = current {
+            print!("{} -> ", node.value);
+            current = node.next.as_ref();
         }
+        println!("None")
     }
 
-    fn pop_back(&mut self) -> Option<T> {
+    pub fn pop_front(&mut self) -> Option<T> {
+        let current = self.head.take()?;
+        self.head = current.next;
+
+        Some(current.value)
+    }
+
+    pub fn push_back(&mut self, value: T) {
         if self.head.is_none() {
-            return None;
+            return self.push_front(value);
         }
 
-        if self.head.as_ref().unwrap().next.is_none() {
+        let new_node = Box::new(Node::new(value, None));
+        let mut current = self.head.as_mut().unwrap();
+
+        while current.next.is_some() {
+            current = current.next.as_mut().unwrap();
+        }
+
+        current.next = Some(new_node)
+    }
+
+    pub fn pop_back(&mut self) -> Option<T> {
+        if self.head.as_ref()?.next.is_none() {
             return self.pop_front();
         }
 
-        let mut current = self.head.as_mut().unwrap();
+        let mut current = self.head.as_mut()?;
 
-        while current.next.as_ref().unwrap().next.is_some() {
-            current = current.next.as_mut().unwrap();
+        while current.next.as_ref()?.next.is_some() {
+            current = current.next.as_mut()?;
         }
 
         current.next.take().map(|node| node.value)
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
+        let mut current = self.head.as_ref();
         let mut count: usize = 0;
-        let mut current = &self.head;
 
         while let Some(node) = current {
             count += 1;
-            current = &node.next;
+            current = node.next.as_ref();
         }
 
         count
     }
 
-    fn peek(&self) -> Option<&T> {
+    pub fn peek(&self) -> Option<&T> {
         self.head.as_ref().map(|node| &node.value)
     }
 
-    fn is_empty(&self) -> bool {
+    pub fn peek_back(&self) -> Option<&T> {
+        let mut current = self.head.as_ref()?;
+
+        while let Some(node) = &current.next {
+            current = node;
+        }
+
+        Some(&current.value)
+    }
+
+    pub fn is_empty(&self) -> bool {
         self.head.is_none()
     }
 
-    fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.head.take();
     }
 
-    fn get_value(&self, index: usize) -> Option<&T> {
-        let mut current = &self.head;
-
-        for _ in 0..index {
-            match current {
-                Some(node) => {
-                    current = &node.next;
-                }
-                None => return None,
-            }
-        }
-        current.as_ref().map(|node| &node.value)
-    }
-
-    fn insert_at_index(&mut self, index: usize, value: T) {
+    pub fn insert_at_index(&mut self, index: usize, value: T) {
         if index == 0 {
             return self.push_front(value);
         }
 
-        if self.head.is_none() && index > 0 {
-            return;
-        }
-
-        let mut current = self.head.as_mut().unwrap();
+        let mut current = self.head.as_mut();
 
         for _ in 0..(index - 1) {
-            match current.next.as_mut() {
-                Some(node) => current = node,
+            match current {
                 None => return,
+                Some(node) => {
+                    current = node.next.as_mut();
+                }
             }
         }
 
-        let new_node = Box::new(Node::new(value, current.next.take()));
-        current.next = Some(new_node);
+        if let Some(node) = current {
+            let new_node = Box::new(Node::new(value, node.next.take()));
+            node.next = Some(new_node)
+        }
     }
 
-    fn remove_at_index(&mut self, index: usize) -> Option<T> {
+    pub fn get_value(&self, index: usize) -> Option<&T> {
+        let mut current = self.head.as_ref()?;
+
+        for _ in 0..(index) {
+            current = current.next.as_ref()?;
+        }
+
+        Some(&current.value)
+    }
+
+    pub fn remove_at_index(&mut self, index: usize) -> Option<T> {
         if index == 0 {
             return self.pop_front();
         }
@@ -137,39 +162,29 @@ impl<T> LinkedList<T> {
         let removed_node = current.next.take()?;
 
         current.next = removed_node.next;
-
         Some(removed_node.value)
     }
 
-    fn peek_back(&self) -> Option<&T> {
-        let mut current = self.head.as_ref()?;
-
-        while current.next.is_some() {
-            current = current.next.as_ref()?;
-        }
-
-        Some(&current.value)
-    }
-
-    fn contains(&self, value: T) -> bool
+    pub fn contains(&self, value: T) -> bool
     where
         T: PartialEq,
     {
-        let mut current = &self.head;
+        let mut current = self.head.as_ref();
 
         while let Some(node) = current {
             if node.value == value {
                 return true;
             }
-            current = &node.next;
+
+            current = node.next.as_ref();
         }
 
         false
     }
 
-    fn reverse(&mut self) {
-        let mut current = self.head.take();
+    pub fn reverse(&mut self) {
         let mut prev = None;
+        let mut current = self.head.take();
 
         while let Some(mut node) = current {
             let next = node.next.take();
