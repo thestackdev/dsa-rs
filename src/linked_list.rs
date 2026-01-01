@@ -1,8 +1,4 @@
-use core::num;
-use std::{
-    cell::RefMut,
-    fmt::{self, Display},
-};
+use std::fmt::{self, Display};
 
 #[derive(Debug)]
 struct Node<T> {
