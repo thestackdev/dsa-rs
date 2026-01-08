@@ -16,3 +16,5 @@ pub fn binary_search<T: Ord>(array: &[T], search_key: T) -> Result<usize, usize>
 
     Err(start)
 }
+
+fn main() {}

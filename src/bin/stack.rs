@@ -64,5 +64,19 @@ impl<T> Stack<T> {
             print!("{} <- ", node.value);
             current = node.next.as_ref();
         }
+        println!();
     }
+}
+
+fn main() {
+    let mut stack = Stack::default();
+
+    stack.push(100);
+    stack.push(200);
+
+    stack.display();
+
+    stack.pop();
+
+    stack.display();
 }

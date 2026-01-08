@@ -18,15 +18,12 @@ impl<T: Display> fmt::Display for Node<T> {
     }
 }
 
+#[derive(Default)]
 pub struct LinkedList<T> {
     head: Option<Box<Node<T>>>,
 }
 
 impl<T: fmt::Display> LinkedList<T> {
-    pub fn new() -> Self {
-        Self { head: None }
-    }
-
     pub fn push_front(&mut self, value: T) {
         let new_node = Box::new(Node::new(value, self.head.take()));
         self.head = Some(new_node);
@@ -191,4 +188,12 @@ impl<T: fmt::Display> LinkedList<T> {
 
         self.head = prev;
     }
+}
+
+fn main() {
+    let mut linked_list = LinkedList::default();
+
+    linked_list.push_front(100);
+
+    linked_list.display();
 }
