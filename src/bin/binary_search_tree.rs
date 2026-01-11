@@ -1,4 +1,5 @@
 use std::cmp::*;
+use std::collections::VecDeque;
 use std::fmt;
 
 #[derive(Eq, Ord, PartialEq, PartialOrd, Clone, Debug)]
@@ -135,6 +136,25 @@ impl<T: Ord + Clone + fmt::Display> BinarySearchTree<T> {
                 left: None,
                 right: None,
             }))
+        }
+    }
+
+    fn level_order(&self) {
+        if let Some(ref root) = self.root {
+            let mut queue = VecDeque::new();
+
+            queue.push_back(root);
+
+            while let Some(node) = queue.pop_front() {
+                print!("{} ", node.value);
+
+                if let Some(ref left) = node.left {
+                    queue.push_back(left);
+                }
+                if let Some(ref right) = node.right {
+                    queue.push_back(right);
+                }
+            }
         }
     }
 
@@ -281,4 +301,7 @@ fn main() {
     bst.postorder();
 
     println!("Height of the tree is {}", bst.height());
+
+    println!("Level Order");
+    bst.level_order();
 }
